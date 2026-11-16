@@ -152,5 +152,60 @@ function calculate(){
 function resetQuick(){document.getElementById('qRevenue').value='';document.getElementById('qDistance').value='';document.getElementById('qCosts').value='';document.getElementById('output').classList.add('hidden')}
 function resetDetail(){['dRevenue','loaded','empty','consumption','fuelPrice','driver','tolls','other','vehicleRate'].forEach(id=>document.getElementById(id).value='');document.getElementById('output').classList.add('hidden')}
 </script>
+
+<script>
+const savedTripsKey = 'reisVPlusTrips';
+
+function saveCurrentTrip() {
+  const output = document.getElementById('output');
+  if (output.classList.contains('hidden')) {
+    alert('Сначала рассчитайте рейс');
+    return;
+  }
+
+  const trip = {
+    id: Date.now(),
+    date: new Date().toLocaleString('ru-RU'),
+    result: output.innerText
+  };
+
+  const trips = JSON.parse(localStorage.getItem(savedTripsKey) || '[]');
+  trips.unshift(trip);
+  localStorage.setItem(savedTripsKey, JSON.stringify(trips));
+
+ 
+  alert('Рейс сохранён!');
+}
+
+function showSavedTrips() {
+  const trips = JSON.parse(localStorage.getItem(savedTripsKey) || '[]');
+  if (!trips.length) {
+    alert('Сохранённых рейсов пока нет');
+    return;
+  }
+
+  alert(trips.map((trip, index) =>
+    (index + 1) + '. ' + trip.date + '\n' + trip.result
+  ).join('\n\n----------------\n\n'));
+}
+
+const tripButtons = document.createElement('div');
+tripButtons.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;margin:15px 0;';
+
+tripButtons.innerHTML = `
+  <button onclick="saveCurrentTrip()" style="padding:12px 18px;border:0;border-radius:10px;background:#16834a;color:white;font-weight:bold;">
+    Сохранить рейс
+  </button>
+  <button onclick="showSavedTrips()" style="padding:12px 18px;border:0;border-radius:10px;background:#2457a6;color:white;font-weight:bold;">
+    История рейсов
+  </button>
+`;
+
+const outputElement = document.getElementById('output');
+if (outputElement) {
+  outputElement.insertAdjacentElement('afterend', tripButtons);
+}
+
+</script>
 </body>
 </html>
