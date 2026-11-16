@@ -207,5 +207,120 @@ if (outputElement) {
 }
 
 </script>
+ 
+<script>
+const fleetKey = 'reisVPlusFleet';
+
+function getFleet() {
+  return JSON.parse(localStorage.getItem(fleetKey) || '[]');
+}
+
+function renderFleet() {
+  const fleet = getFleet();
+  const box = document.getElementById('fleetList');
+  if (!box) return;
+
+  box.innerHTML = '';
+
+  if (!fleet.length) {
+    box.textContent = 'Автомобили пока не добавлены.';
+    return;
+  }
+
+  fleet.forEach(car => {
+    const item = document.createElement('div');
+    item.style.cssText = 'padding:12px;margin:8px 0;background:#f3f6fa;border-radius:10px;';
+    const info = document.createElement('div');
+    info.textContent = car.name + ' — ' + car.consumption +
+      ' л/100 км; износ ' + car.wear + ' ₽/км';
+
+    const select = document.createElement('button');
+    select.textContent = 'Выбрать';
+    select.style.cssText = 'margin:8px 8px 0 0;padding:9px 14px;border:0;border-radius:8px;background:#2463eb;color:white;';
+    select.onclick = () => {
+      document.getElementById('consumption').value = car.consumption;
+      document.getElementById('vehicleRate').value = car.wear;
+      alert('Параметры автомобиля подставлены в подробный расчёт.');
+      setMode('detail');
+    };
+
+    const remove = document.createElement('button');
+    remove.textContent = 'Удалить';
+    remove.style.cssText = 'padding:9px 14px;border:0;border-radius:8px;background:#e8edf4;';
+    remove.onclick = () => {
+      if (!confirm('Удалить этот автомобиль?')) return;
+      localStorage.setItem(fleetKey, JSON.stringify(
+        getFleet().filter(c => c.id !== car.id)
+      ));
+      renderFleet();
+    };
+
+    item.append(info, select, remove);
+    box.appendChild(item);
+  });
+}
+
+function addCar() {
+  const name = document.getElementById('carName').value.trim();
+  const consumption = Number(document.getElementById('carConsumption').value);
+  const wear = Number(document.getElementById('carWear').value);
+
+  if (!name || consumption <= 0 || wear < 0 ||
+      !Number.isFinite(consumption) || !Number.isFinite(wear)) {
+    alert('Проверь название, расход топлива и стоимость износа.');
+    return;
+  }
+
+  const fleet = getFleet();
+  fleet.push({
+    id: Date.now(),
+    name,
+    consumption,
+    wear
+  });
+
+  localStorage.setItem(fleetKey, JSON.stringify(fleet));
+
+  document.getElementById('carName').value = '';
+  document.getElementById('carConsumption').value = '';
+  document.getElementById('carWear').value = '';
+
+  renderFleet();
+  alert('Автомобиль сохранён!');
+}
+
+const fleetPanel = document.createElement('section');
+fleetPanel.className = 'card';
+fleetPanel.innerHTML = `
+  <h2>Мои автомобили</h2>
+  <div class="field">
+    <label for="carName">Название автомобиля</label>
+    <input id="carName" placeholder="Например, Volvo FH">
+  </div>
+  <div class="field" style="margin-top:10px">
+    <label for="carConsumption">Расход топлива, л/100 км</label>
+    <input id="carConsumption" type="number" min="0.1" step="0.1" placeholder="Например, 28">
+  </div>
+  <div class="field" style="margin-top:10px">
+    <label for="carWear">Износ и обслуживание, ₽/км</label>
+    <input id="carWear" type="number" min="0" step="0.1" placeholder="Например, 8">
+  </div>
+  <button id="addCarButton" type="button"
+    style="margin-top:12px;padding:12px 16px;border:0;border-radius:10px;background:#16834a;color:white;font-weight:bold;">
+    Добавить автомобиль
+  </button>
+  <h2 style="margin-top:20px">Список автомобилей</h2>
+  <div id="fleetList"></div>
+`;
+
+document.querySelector('main').insertBefore(
+  fleetPanel,
+  document.getElementById('quick')
+);
+
+document.getElementById('addCarButton').onclick = addCar;
+renderFleet();
+</script>
+
 </body>
 </html>
