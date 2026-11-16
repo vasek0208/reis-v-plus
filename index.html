@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#102b46">
+<title>Рейс в плюс — калькулятор рейса</title>
+<style>
+:root{--navy:#102b46;--blue:#2463eb;--bg:#f3f6fa;--card:#fff;--text:#172536;--muted:#68788b;--line:#e2e8f0;--green:#14804a;--red:#c0392b;--amber:#a66308}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:var(--navy);color:white;padding:24px 18px 28px}header .wrap,main{max-width:760px;margin:auto}
+.brand{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#b8c9dc;font-weight:700}
+h1{font-size:28px;margin:8px 0 5px}header p{margin:0;color:#d1deeb;font-size:14px;line-height:1.5}
+main{padding:18px 14px 42px}
+.tabs{display:flex;background:#e5ebf3;padding:4px;border-radius:12px;margin:0 0 16px}
+.tabs button{flex:1;border:0;background:transparent;padding:12px 8px;border-radius:9px;font-weight:700;color:#526276;font-size:14px}
+.tabs button.active{background:white;color:var(--navy);box-shadow:0 1px 4px #102b4618}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:0 3px 12px #102b4608}
+.card h2{font-size:17px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+label{font-size:13px;color:#526276;font-weight:600}
+input{width:100%;min-width:0;border:1px solid #d5deea;border-radius:10px;padding:12px 11px;font-size:16px;color:var(--text);background:white}
+input:focus{outline:2px solid #b7ccff;border-color:var(--blue)}
+.hint{font-size:11px;color:#8190a2;line-height:1.35}
+.full{grid-column:1/-1}
+.actions{display:flex;gap:10px;margin:14px 0}
+.primary,.secondary{border:0;border-radius:11px;padding:14px 16px;font-weight:700;font-size:15px}
+.primary{background:var(--blue);color:white;flex:1}
+.secondary{background:#e8edf4;color:#34465b}
+.result{background:var(--navy);color:white;border-radius:16px;padding:18px;margin:14px 0}
+.result .eyebrow{color:#b9c9da;font-size:13px}
+.profit{font-size:34px;font-weight:800;margin:5px 0}
+.status{display:inline-block;padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#d9f5e6;color:#11633b}
+.status.bad{background:#ffe2df;color:#9e271d}.status.warn{background:#fff0d6;color:#875000}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.metric{background:#ffffff12;border-radius:10px;padding:11px}
+.metric span{display:block;color:#c5d3e1;font-size:11px;margin-bottom:5px}
+.metric strong{font-size:17px}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.hidden{display:none!important}
+footer{text-align:center;color:#8492a3;font-size:11px;padding:8px 0 20px}
+@media(max-width:420px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.profit{font-size:30px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<div class="brand">Ваш помощник перевозчика</div>
+<h1>Рейс в плюс</h1>
+<p>Посчитайте экономику рейса до того, как соглашаться на перевозку.</p>
+</div></header>
+<main>
+<div class="tabs" role="tablist">
+<button id="quickTab" class="active" type="button" onclick="setMode('quick')">Быстрый расчёт</button>
+<button id="detailTab" type="button" onclick="setMode('detail')">Подробный расчёт</button>
+</div>
+
+<section id="quick" class="mode">
+<div class="card">
+<h2>Данные рейса</h2>
+<div class="grid">
+<div class="field"><label for="qRevenue">Оплата за рейс, ₽</label><input id="qRevenue" type="number" min="0" step="100" value="85000"></div>
+<div class="field"><label for="qDistance">Общий пробег, км</label><input id="qDistance" type="number" min="0" step="1" value="700"></div>
+<div class="field full"><label for="qCosts">Все расходы на рейс, ₽</label><input id="qCosts" type="number" min="0" step="100" value="54000"><span class="hint">Введите общую сумму расходов, включая топливо, водителя и прочее.</span></div>
+</div>
+</div>
+<div class="actions"><button class="primary" type="button" onclick="calculate()">Рассчитать прибыль</button><button class="secondary" type="button" onclick="resetQuick()">Сбросить</button></div>
+</section>
+
+<section id="detail" class="mode hidden">
+<div class="card">
+<h2>1. Выручка и расстояние</h2>
+<div class="grid">
+<div class="field"><label for="dRevenue">Оплата за рейс, ₽</label><input id="dRevenue" type="number" min="0" step="100" value="85000"></div>
+<div class="field"><label for="loaded">Пробег с грузом, км</label><input id="loaded" type="number" min="0" step="1" value="500"></div>
+<div class="field"><label for="empty">Порожний пробег, км</label><input id="empty" type="number" min="0" step="1" value="200"></div>
+</div>
+</div>
+<div class="card">
+<h2>2. Топливо</h2>
+<div class="grid">
+<div class="field"><label for="consumption">Расход топлива, л / 100 км</label><input id="consumption" type="number" min="0" step=".1" value="25"></div>
+<div class="field"><label for="fuelPrice">Цена топлива, ₽ / л</label><input id="fuelPrice" type="number" min="0" step=".1" value="65"></div>
+</div>
+</div>
+<div class="card">
+<h2>3. Остальные расходы</h2>
+<div class="grid">
+<div class="field"><label for="driver">Водитель, ₽</label><input id="driver" type="number" min="0" step="100" value="10000"></div>
+<div class="field"><label for="tolls">Платные дороги, ₽</label><input id="tolls" type="number" min="0" step="100" value="2500"></div>
+<div class="field"><label for="other">Прочие расходы, ₽</label><input id="other" type="number" min="0" step="100" value="1500"></div>
+<div class="field"><label for="vehicleRate">Резерв на износ и обслуживание, ₽/км</label><input id="vehicleRate" type="number" min="0" step=".1" value="8"><span class="hint">Необязательно. Можно оставить 0, если пока не учитываете.</span></div>
+</div>
+</div>
+<div class="actions"><button class="primary" type="button" onclick="calculate()">Рассчитать прибыль</button><button class="secondary" type="button" onclick="resetDetail()">Сбросить</button></div>
+</section>
+
+<section id="output" class="hidden" aria-live="polite">
+<div class="result">
+<div class="eyebrow">Расчётная прибыль рейса</div>
+<div class="profit" id="profit">—</div>
+<span id="status" class="status">—</span>
+<div class="metrics">
+<div class="metric"><span>Все расходы</span><strong id="totalCosts">—</strong></div>
+<div class="metric"><span>Рентабельность от выручки</span><strong id="margin">—</strong></div>
+<div class="metric"><span>Прибыль на 1 км</span><strong id="perKm">—</strong></div>
+<div class="metric"><span>Минимальная ставка безубыточности</span><strong id="breakEven">—</strong></div>
+</div>
+</div>
+<div class="card">
+<h2>Из чего сложился результат</h2>
+<div id="breakdown" class="note"></div>
+<p class="note" id="calculationNote"></p>
+</div>
+</section>
+<p class="note">Важно: это предварительная управленческая оценка, а не бухгалтерский расчёт. Проверьте, что учли налоги, НДС (если применимо), ожидание, обратный путь и все дополнительные затраты. Не включайте один и тот же расход дважды.</p>
+<footer>Рейс в плюс · первая тестовая версия</footer>
+</main>
+<script>
+let mode='quick';
+const ids=['qRevenue','qDistance','qCosts','dRevenue','loaded','empty','consumption','fuelPrice','driver','tolls','other','vehicleRate'];
+function val(id){const n=Number(document.getElementById(id).value);return Number.isFinite(n)&&n>0?n:0}
+function rub(n){return new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0}).format(n)}
+function setMode(next){mode=next;document.getElementById('quick').classList.toggle('hidden',next!=='quick');document.getElementById('detail').classList.toggle('hidden',next!=='detail');document.getElementById('quickTab').classList.toggle('active',next==='quick');document.getElementById('detailTab').classList.toggle('active',next==='detail');document.getElementById('output').classList.add('hidden')}
+function showResult(revenue,distance,costs,parts,note){
+ const profit=revenue-costs, margin=revenue>0?profit/revenue*100:0, perKm=distance>0?profit/distance:0;
+ document.getElementById('profit').textContent=rub(profit);
+ const s=document.getElementById('status');s.className='status'+(profit<0?' bad':profit===0?' warn':'');s.textContent=profit<0?'Рейс убыточный':profit===0?'Работа в ноль':'Положительный результат';
+ document.getElementById('totalCosts').textContent=rub(costs);
+ document.getElementById('margin').textContent=revenue>0?margin.toFixed(1).replace('.',',')+'%':'—';
+ document.getElementById('perKm').textContent=distance>0?rub(perKm):'—';
+ document.getElementById('breakEven').textContent=rub(costs);
+ document.getElementById('breakdown').innerHTML=parts.map(p=>'<div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid #edf1f5"><span>'+p[0]+'</span><b>'+rub(p[1])+'</b></div>').join('')+'<div style="display:flex;justify-content:space-between;padding:9px 0;font-size:14px"><b>Выручка</b><b>'+rub(revenue)+'</b></div>';
+ document.getElementById('calculationNote').textContent=note;
+ document.getElementById('output').classList.remove('hidden');
+ document.getElementById('output').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function calculate(){
+ if(mode==='quick'){
+  const rev=val('qRevenue'), dist=val('qDistance'), costs=val('qCosts');
+  if(rev<=0||dist<=0){alert('Укажите оплату за рейс и общий пробег больше нуля.');return}
+  showResult(rev,dist,costs,[['Все расходы',costs]],'Быстрый режим: расходы введены одной общей суммой. Минимальная ставка безубыточности равна указанным расходам.');
+ }else{
+  const rev=val('dRevenue'), loaded=val('loaded'), empty=val('empty'), dist=loaded+empty;
+  if(rev<=0||dist<=0){alert('Укажите оплату за рейс и пробег больше нуля.');return}
+  const fuelLitres=dist*val('consumption')/100, fuelCost=fuelLitres*val('fuelPrice'), driver=val('driver'), tolls=val('tolls'), other=val('other'), wear=dist*val('vehicleRate');
+  const parts=[['Топливо ('+fuelLitres.toFixed(1).replace('.',',')+' л)',fuelCost],['Водитель',driver],['Платные дороги',tolls],['Прочие расходы',other],['Резерв на износ и обслуживание',wear]];
+  const total=parts.reduce((s,p)=>s+p[1],0);
+  showResult(rev,dist,total,parts,'Подробный режим: топливо рассчитано по всему указанному пробегу, включая порожний. Резерв на износ — оценка, а не фактически оплаченный расход.');
+ }
+}
+function resetQuick(){document.getElementById('qRevenue').value='';document.getElementById('qDistance').value='';document.getElementById('qCosts').value='';document.getElementById('output').classList.add('hidden')}
+function resetDetail(){['dRevenue','loaded','empty','consumption','fuelPrice','driver','tolls','other','vehicleRate'].forEach(id=>document.getElementById(id).value='');document.getElementById('output').classList.add('hidden')}
+</script>
+</body>
+</html>
