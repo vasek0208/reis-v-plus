@@ -322,5 +322,72 @@ document.getElementById('addCarButton').onclick = addCar;
 renderFleet();
 </script>
 
+
+<script>
+function renderAnalytics() {
+  const trips = JSON.parse(
+    localStorage.getItem('reisVPlusTrips') || '[]'
+  );
+
+  const panel = document.getElementById('analyticsPanel');
+  if (!panel) return;
+
+  function getNumber(text, label) {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const match = text.match(
+      new RegExp(escaped + '\\s*([\\d\\s\\u00a0]+)\\s*₽', 'i')
+    );
+    return match
+      ? Number(match[1].replace(/[\\s\\u00a0]/g, ''))
+      : null;
+  }
+
+  const data = trips.map(trip => {
+    const text = trip.result || '';
+    return {
+      date: trip.date,
+      profit: getNumber(text, 'Расчётная прибыль рейса'),
+      revenue: getNumber(text, 'Выручка'),
+      costs: getNumber(text, 'Все расходы')
+    };
+  }).filter(t => t.profit !== null);
+
+  if (!data.length) {
+    panel.innerHTML = '<p>Пока нет данных для аналитики.</p>';
+    return;
+  }
+
+  const totalProfit = data.reduce((s, t) => s + t.profit, 0);
+  const totalRevenue = data.reduce((s, t) => s + (t.revenue || 0), 0);
+  const totalCosts = data.reduce((s, t) => s + (t.costs || 0), 0);
+  const best = data.reduce((a, b) => a.profit > b.profit ? a : b);
+  const worst = data.reduce((a, b) => a.profit < b.profit ? a : b);
+
+  panel.innerHTML = `
+    <h2>Аналитика автопарка</h2>
+    <div style="padding:14px;background:#eaf7ef;border-radius:12px;margin:10px 0">
+      <div>Общая прибыль</div>
+      <strong style="font-size:26px;color:#16834a">
+        ${totalProfit.toLocaleString('ru-RU')} ₽
+      </strong>
+    </div>
+    <p>Количество рейсов: <b>${data.length}</b></p>
+    <p>Общая выручка: <b>${totalRevenue.toLocaleString('ru-RU')} ₽</b></p>
+    <p>Общие расходы: <b>${totalCosts.toLocaleString('ru-RU')} ₽</b></p>
+    <hr>
+    <p>Самый прибыльный рейс: <b>${best.profit.toLocaleString('ru-RU')} ₽</b></p>
+    <p>Самый убыточный рейс: <b>${worst.profit.toLocaleString('ru-RU')} ₽</b></p>
+  `;
+}
+
+const analyticsPanel = document.createElement('section');
+analyticsPanel.id = 'analyticsPanel';
+analyticsPanel.style.cssText =
+  'background:white;padding:18px;border-radius:14px;margin:18px 0;box-shadow:0 2px 10px #0001;';
+
+document.querySelector('main').appendChild(analyticsPanel);
+renderAnalytics();
+</script>
+
 </body>
 </html>
